@@ -39,6 +39,57 @@ cd backend
 
 서버가 뜨면 http://localhost:8080 으로 접속할 수 있습니다. 처음 실행할 때는 의존성을 내려받느라 시간이 조금 걸립니다.
 
+이전에 띄운 서버가 8080 포트를 계속 점유하고 있으면 아래 스크립트로 정리할 수 있습니다.
+
+```bash
+cd backend
+scripts/kill-port.sh          # 8080 포트를 점유한 프로세스 종료
+scripts/kill-port.sh 3000     # 다른 포트 지정
+```
+
+정상 종료(SIGTERM)를 먼저 시도하고, 10초 안에 종료되지 않으면 강제 종료(SIGKILL)합니다.
+
+### API
+
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| `GET` | `/hello` | 서버 상태 확인 (인사말, 현재 시각, Java 버전) |
+| `GET` | `/api/entries` | 거래 내역 목록 (최신 날짜순) |
+| `GET` | `/api/entries/{id}` | 거래 내역 단건 조회 |
+| `POST` | `/api/entries` | 거래 내역 등록 (201 + `Location` 헤더) |
+| `PUT` | `/api/entries/{id}` | 거래 내역 수정 (전체 교체) |
+| `DELETE` | `/api/entries/{id}` | 거래 내역 삭제 (204) |
+
+등록/수정 요청 본문 예시:
+
+```json
+{
+  "date": "2026-11-15",
+  "type": "EXPENSE",
+  "amount": 12000,
+  "category": "식비",
+  "memo": "점심"
+}
+```
+
+- `type`: `INCOME`(수입) 또는 `EXPENSE`(지출)
+- `amount`: 0보다 큰 정수(원)
+- `memo`: 선택
+
+에러 응답은 [RFC 9457 ProblemDetail](https://www.rfc-editor.org/rfc/rfc9457) 형식입니다. 입력값이 잘못된 경우(400)에는 `errors` 배열에 필드별 원인이 담깁니다.
+
+```json
+{
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "입력값이 올바르지 않습니다",
+  "instance": "/api/entries",
+  "errors": [
+    { "field": "amount", "message": "금액은 0보다 커야 합니다" }
+  ]
+}
+```
+
 ### 테스트
 
 ```bash
@@ -47,6 +98,8 @@ cd backend
 ./gradlew test --tests 'com.budgetbook.SomeTest'              # 특정 테스트 클래스
 ./gradlew test --tests 'com.budgetbook.SomeTest.methodName'   # 특정 테스트 메서드
 ```
+
+테스트는 `test` 프로필로 실행되므로 로컬 샘플 데이터가 들어가지 않습니다(`build.gradle.kts`에서 지정). IntelliJ에서 테스트를 실행할 때는 **Settings → Build, Execution, Deployment → Build Tools → Gradle → Run tests using**이 `Gradle`로 되어 있어야 이 설정이 적용됩니다.
 
 ### 빌드
 
@@ -69,3 +122,18 @@ cd backend
 - 비밀번호: (비워둠)
 
 실행되는 SQL은 애플리케이션 콘솔 로그에 출력됩니다.
+
+### 프로필과 샘플 데이터
+
+| 프로필 | 언제 | 동작 |
+|---|---|---|
+| `local` | 프로필을 따로 지정하지 않고 실행할 때 (기본값) | 앱이 뜰 때 샘플 거래 내역 12건을 자동 등록 |
+| `test` | `./gradlew test` 실행 시 | 샘플 데이터 없음 |
+
+샘플 데이터는 실행한 날 기준 **이번 달 6건, 지난달 6건**으로 만들어집니다. DB에 이미 데이터가 있으면 등록하지 않습니다. 내용은 `backend/src/main/kotlin/com/budgetbook/local/SampleDataLoader.kt`에서 바꿀 수 있습니다.
+
+샘플 데이터 없이 실행하려면 다른 프로필을 지정합니다.
+
+```bash
+./gradlew bootRun --args='--spring.profiles.active=dev'
+```
