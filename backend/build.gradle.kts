@@ -49,4 +49,6 @@ allOpen {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	// 테스트는 test 프로필로 실행해서 local 전용 설정(샘플 데이터 등)이 섞이지 않게 한다
+	systemProperty("spring.profiles.active", "test")
 }
