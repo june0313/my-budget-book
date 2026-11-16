@@ -1,0 +1,25 @@
+/* 앱 전체에 적용되는 기본 스타일 */
+
+:root {
+  --text: #1f2328;
+  --text-muted: #59636e;
+  --bg: #ffffff;
+
+  font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* OS가 다크 모드면 색을 바꾼다 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #e6edf3;
+    --text-muted: #9198a1;
+    --bg: #0d1117;
+  }
+}
+
+body {
+  margin: 0;
+}

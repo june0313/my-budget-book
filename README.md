@@ -1,12 +1,41 @@
 # my-budget-book
 
-개인 가계부 애플리케이션입니다. 백엔드는 Kotlin + Spring Boot로 만들고 있습니다.
+개인 가계부 애플리케이션입니다. 백엔드는 Kotlin + Spring Boot, 프런트엔드는 React + Vite로 만들고 있습니다.
 
 ## 프로젝트 구조
 
 ```
 my-budget-book/
-└── backend/   # Kotlin + Spring Boot API 서버
+├── backend/    # Kotlin + Spring Boot API 서버 (8080)
+├── frontend/   # React + TypeScript 화면 (개발 서버 5173)
+└── docs/       # 요구사항 문서
+```
+
+## 프런트엔드
+
+### 준비물
+
+- **Node.js** (`node -v`로 확인)
+
+### 실행
+
+```bash
+cd frontend
+npm install     # 처음 한 번, 또는 package.json이 바뀌었을 때
+npm run dev     # 개발 서버 실행 → http://localhost:5173
+```
+
+코드를 저장하면 브라우저에 바로 반영됩니다(HMR).
+
+### 백엔드 연결
+
+개발 서버는 `/api`로 시작하는 요청을 백엔드(http://localhost:8080)로 넘겨줍니다(`frontend/vite.config.ts`의 `server.proxy`). 그래서 화면 코드에서는 `fetch('/api/entries')`처럼 주소 없이 호출하면 되고, 백엔드에 CORS 설정을 하지 않아도 됩니다. API를 쓰는 화면을 볼 때는 백엔드도 함께 실행해 두세요.
+
+### 그 밖의 명령
+
+```bash
+npm run build   # 타입 검사 + 배포용 빌드 (frontend/dist/)
+npm run lint    # 코드 검사 (oxlint)
 ```
 
 ## 백엔드

@@ -6,7 +6,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Personal budget book (가계부) app. The owner is building it partly to learn Kotlin + Spring Boot backend development, so explain non-obvious Kotlin/Spring choices when making changes. Communicate in Korean.
 
-Layout: the repo root holds subprojects. Currently only `backend/` exists (a frontend may be added later as a sibling directory). Git is initialized at the root, not inside `backend/`.
+Layout: the repo root holds subprojects — `backend/` (Spring Boot API) and `frontend/` (React + Vite UI) — plus `docs/`. Git is initialized at the root, not inside the subprojects.
+
+## Frontend
+
+React 19 + TypeScript + Vite, scaffolded with `create-vite` (react-ts template; lint is oxlint, not ESLint). The owner is learning from reading this code, so keep it minimal and plain: no extra libraries (state management, router, UI kit) unless asked. Currently only a welcome page (`src/App.tsx`).
+
+Run from `frontend/`:
+
+```bash
+npm run dev      # dev server on http://localhost:5173
+npm run build    # tsc type check + production build
+npm run lint     # oxlint
+```
+
+The Vite dev server proxies `/api` to `http://localhost:8080` (`vite.config.ts`), so UI code calls relative `/api/...` URLs and the backend needs no CORS config. Clean up a dev server you started with `backend/scripts/kill-port.sh 5173`.
 
 ## Backend commands
 
