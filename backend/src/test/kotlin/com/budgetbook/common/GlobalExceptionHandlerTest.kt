@@ -30,12 +30,12 @@ class GlobalExceptionHandlerTest(
 
     @Test
     fun `검증 실패 시 필드별 메시지를 모두 돌려준다`() {
-        postEntry("""{"date": "2026-11-15", "type": "EXPENSE", "amount": 0, "category": " "}""").andExpect {
+        postEntry("""{"date": "2026-11-15", "type": "EXPENSE", "amount": 0, "categoryId": 1, "memo": "${"가".repeat(256)}"}""").andExpect {
             status { isBadRequest() }
             jsonPath("$.detail") { value("입력값이 올바르지 않습니다") }
             jsonPath("$.errors.length()") { value(2) }
             jsonPath("$.errors[?(@.field == 'amount')].message") { value("금액은 0보다 커야 합니다") }
-            jsonPath("$.errors[?(@.field == 'category')].message") { value("카테고리를 입력해 주세요") }
+            jsonPath("$.errors[?(@.field == 'memo')].message") { value("메모는 255자 이하로 입력해 주세요") }
         }
     }
 
@@ -57,7 +57,7 @@ class GlobalExceptionHandlerTest(
 
     @Test
     fun `필수 값이 빠지면 어느 필드인지 알려준다`() {
-        postEntry("""{"type": "EXPENSE", "amount": 1000, "category": "식비"}""").andExpect {
+        postEntry("""{"type": "EXPENSE", "amount": 1000, "categoryId": 1}""").andExpect {
             status { isBadRequest() }
             jsonPath("$.errors[0].field") { value("date") }
             jsonPath("$.errors[0].message") { value("필수 값입니다") }
@@ -66,7 +66,7 @@ class GlobalExceptionHandlerTest(
 
     @Test
     fun `enum에 없는 값이면 허용값을 알려준다`() {
-        postEntry("""{"date": "2026-11-15", "type": "FOOD", "amount": 1000, "category": "식비"}""").andExpect {
+        postEntry("""{"date": "2026-11-15", "type": "FOOD", "amount": 1000, "categoryId": 1}""").andExpect {
             status { isBadRequest() }
             jsonPath("$.errors[0].field") { value("type") }
             jsonPath("$.errors[0].message") { value("허용되지 않는 값입니다 (입력값: FOOD, 허용값: INCOME, EXPENSE)") }
@@ -75,7 +75,7 @@ class GlobalExceptionHandlerTest(
 
     @Test
     fun `날짜 형식이 틀리면 어느 필드인지 알려준다`() {
-        postEntry("""{"date": "2026/11/15", "type": "EXPENSE", "amount": 1000, "category": "식비"}""").andExpect {
+        postEntry("""{"date": "2026/11/15", "type": "EXPENSE", "amount": 1000, "categoryId": 1}""").andExpect {
             status { isBadRequest() }
             jsonPath("$.errors[0].field") { value("date") }
             jsonPath("$.errors[0].message") { value("값의 형식이 올바르지 않습니다 (입력값: 2026/11/15)") }

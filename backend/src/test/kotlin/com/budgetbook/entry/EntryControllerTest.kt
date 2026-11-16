@@ -1,5 +1,7 @@
 package com.budgetbook.entry
 
+import com.budgetbook.category.Category
+import com.budgetbook.category.CategoryRepository
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -13,39 +15,53 @@ import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 
+/** 앱 전체를 띄우므로 기본 카테고리가 등록된 상태에서 시작한다 */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional // 테스트마다 DB 변경을 롤백
 class EntryControllerTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val entryRepository: EntryRepository,
+    @Autowired private val categoryRepository: CategoryRepository,
 ) {
 
-    private val lunchJson = """
+    private fun category(type: EntryType, name: String): Category =
+        checkNotNull(categoryRepository.findByTypeAndName(type, name))
+
+    private val food get() = category(EntryType.EXPENSE, "식비")
+    private val salary get() = category(EntryType.INCOME, "급여")
+
+    private fun requestJson(
+        type: EntryType = EntryType.EXPENSE,
+        categoryId: Long? = food.id,
+        date: String = "2026-11-15",
+        amount: Long = 12000,
+    ) = """
         {
-          "date": "2026-11-15",
-          "type": "EXPENSE",
-          "amount": 12000,
-          "category": "식비",
+          "date": "$date",
+          "type": "$type",
+          "amount": $amount,
+          "categoryId": $categoryId,
           "memo": "점심"
         }
     """.trimIndent()
 
     private fun saveEntry(date: LocalDate, amount: Long = 10_000) = entryRepository.save(
-        Entry(date = date, type = EntryType.EXPENSE, amount = amount, category = "식비")
+        Entry(date = date, type = EntryType.EXPENSE, amount = amount, category = food)
     )
 
     @Test
-    fun `거래 내역을 등록하면 201과 Location 헤더를 돌려준다`() {
+    fun `거래 내역을 등록하면 201과 Location 헤더, 카테고리 정보를 돌려준다`() {
         mockMvc.post("/api/entries") {
             contentType = MediaType.APPLICATION_JSON
-            content = lunchJson
+            content = requestJson()
         }.andExpect {
             status { isCreated() }
             header { exists("Location") }
             jsonPath("$.id") { isNumber() }
-            jsonPath("$.category") { value("식비") }
             jsonPath("$.amount") { value(12000) }
+            jsonPath("$.category.id") { value(food.id) }
+            jsonPath("$.category.name") { value("식비") }
         }
     }
 
@@ -59,6 +75,7 @@ class EntryControllerTest(
             jsonPath("$.length()") { value(2) }
             jsonPath("$[0].date") { value("2026-11-15") }
             jsonPath("$[1].date") { value("2026-11-01") }
+            jsonPath("$[0].category.name") { value("식비") }
         }
     }
 
@@ -68,12 +85,12 @@ class EntryControllerTest(
 
         mockMvc.put("/api/entries/$id") {
             contentType = MediaType.APPLICATION_JSON
-            content = lunchJson
+            content = requestJson(type = EntryType.INCOME, categoryId = salary.id, amount = 3_000_000)
         }.andExpect {
             status { isOk() }
-            jsonPath("$.date") { value("2026-11-15") }
-            jsonPath("$.amount") { value(12000) }
-            jsonPath("$.memo") { value("점심") }
+            jsonPath("$.type") { value("INCOME") }
+            jsonPath("$.amount") { value(3_000_000) }
+            jsonPath("$.category.name") { value("급여") }
         }
     }
 
@@ -94,22 +111,37 @@ class EntryControllerTest(
     }
 
     @Test
-    fun `금액이 0 이하이거나 카테고리가 비어 있으면 400을 돌려준다`() {
+    fun `없는 카테고리로 등록하면 400을 돌려준다`() {
         mockMvc.post("/api/entries") {
             contentType = MediaType.APPLICATION_JSON
-            content = """{"date": "2026-11-15", "type": "EXPENSE", "amount": 0, "category": " "}"""
+            content = requestJson(categoryId = 9999)
         }.andExpect {
             status { isBadRequest() }
+            jsonPath("$.detail") { value("존재하지 않는 카테고리입니다. categoryId=9999") }
         }
     }
 
     @Test
-    fun `필수 값이 빠지면 400을 돌려준다`() {
+    fun `지출 거래에 수입 카테고리를 쓰면 400을 돌려준다`() {
         mockMvc.post("/api/entries") {
             contentType = MediaType.APPLICATION_JSON
-            content = """{"type": "EXPENSE", "category": "식비"}"""
+            content = requestJson(type = EntryType.EXPENSE, categoryId = salary.id)
         }.andExpect {
             status { isBadRequest() }
+            jsonPath("$.detail") { value("거래 구분과 카테고리 구분이 다릅니다. (거래: EXPENSE, 카테고리 '급여': INCOME)") }
+        }
+    }
+
+    @Test
+    fun `카테고리 이름을 바꾸면 기존 거래 내역에도 바뀐 이름이 보인다`() {
+        val cafe = categoryRepository.save(Category(name = "카페2", type = EntryType.EXPENSE))
+        val id = entryRepository.save(Entry(LocalDate.of(2026, 11, 1), EntryType.EXPENSE, 4_500, cafe)).id
+        cafe.name = "커피"
+        categoryRepository.saveAndFlush(cafe) // 이름 변경을 DB에 반영
+
+        mockMvc.get("/api/entries/$id").andExpect {
+            status { isOk() }
+            jsonPath("$.category.name") { value("커피") }
         }
     }
 }

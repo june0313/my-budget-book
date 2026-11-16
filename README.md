@@ -59,22 +59,45 @@ scripts/kill-port.sh 3000     # 다른 포트 지정
 | `POST` | `/api/entries` | 거래 내역 등록 (201 + `Location` 헤더) |
 | `PUT` | `/api/entries/{id}` | 거래 내역 수정 (전체 교체) |
 | `DELETE` | `/api/entries/{id}` | 거래 내역 삭제 (204) |
+| `GET` | `/api/categories` | 카테고리 목록 (`?type=EXPENSE`처럼 구분으로 거르기 가능) |
+| `POST` | `/api/categories` | 카테고리 추가 (201) |
+| `PATCH` | `/api/categories/{id}` | 카테고리 이름 변경 |
+| `DELETE` | `/api/categories/{id}` | 카테고리 삭제 (204). 거래 내역이 사용 중이면 409 |
 
-등록/수정 요청 본문 예시:
+거래 내역 등록/수정 요청 본문 예시:
 
 ```json
 {
   "date": "2026-11-15",
   "type": "EXPENSE",
   "amount": 12000,
-  "category": "식비",
+  "categoryId": 1,
   "memo": "점심"
 }
 ```
 
 - `type`: `INCOME`(수입) 또는 `EXPENSE`(지출)
 - `amount`: 0보다 큰 정수(원)
+- `categoryId`: `GET /api/categories`에서 고른 카테고리의 id. 거래의 `type`과 카테고리의 구분이 같아야 합니다
 - `memo`: 선택
+
+거래 내역 응답에는 카테고리 이름이 함께 담깁니다.
+
+```json
+{ "id": 1, "date": "2026-11-15", "type": "EXPENSE", "amount": 12000, "category": { "id": 1, "name": "식비" }, "memo": "점심" }
+```
+
+카테고리 추가 / 이름 변경 요청 본문 예시:
+
+```json
+{ "name": "반려동물", "type": "EXPENSE" }
+```
+
+```json
+{ "name": "외식" }
+```
+
+앱이 시작될 때 기본 카테고리(지출 9개, 수입 4개)가 자동으로 등록됩니다. 자세한 규칙은 [요구사항 문서](docs/requirements.md)를 참고하세요.
 
 에러 응답은 [RFC 9457 ProblemDetail](https://www.rfc-editor.org/rfc/rfc9457) 형식입니다. 입력값이 잘못된 경우(400)에는 `errors` 배열에 필드별 원인이 담깁니다.
 

@@ -1,6 +1,5 @@
 package com.budgetbook.entry
 
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
@@ -13,9 +12,8 @@ data class EntryRequest(
     @Positive(message = "금액은 0보다 커야 합니다")
     val amount: Long,
 
-    @NotBlank(message = "카테고리를 입력해 주세요")
-    @Size(max = 50, message = "카테고리는 50자 이하로 입력해 주세요")
-    val category: String,
+    /** 카테고리 목록(GET /api/categories)에서 고른 카테고리의 id */
+    val categoryId: Long,
 
     @Size(max = 255, message = "메모는 255자 이하로 입력해 주세요")
     val memo: String? = null,
@@ -27,16 +25,25 @@ data class EntryResponse(
     val date: LocalDate,
     val type: EntryType,
     val amount: Long,
-    val category: String,
+    val category: CategorySummary,
     val memo: String?,
 ) {
+    /** 거래 내역 응답에 함께 담는 카테고리 요약 */
+    data class CategorySummary(
+        val id: Long,
+        val name: String,
+    )
+
     companion object {
         fun from(entry: Entry) = EntryResponse(
             id = requireNotNull(entry.id) { "저장되지 않은 Entry는 응답으로 변환할 수 없습니다" },
             date = entry.date,
             type = entry.type,
             amount = entry.amount,
-            category = entry.category,
+            category = CategorySummary(
+                id = requireNotNull(entry.category.id),
+                name = entry.category.name,
+            ),
             memo = entry.memo,
         )
     }
