@@ -29,7 +29,7 @@ npm run dev     # 개발 서버 실행 → http://localhost:5173
 
 ### 백엔드 연결
 
-개발 서버는 `/api`로 시작하는 요청을 백엔드(http://localhost:8080)로 넘겨줍니다(`frontend/vite.config.ts`의 `server.proxy`). 그래서 화면 코드에서는 `fetch('/api/entries')`처럼 주소 없이 호출하면 되고, 백엔드에 CORS 설정을 하지 않아도 됩니다. API를 쓰는 화면을 볼 때는 백엔드도 함께 실행해 두세요.
+개발 서버는 `/api`로 시작하는 요청을 백엔드(http://localhost:8080)로 넘겨줍니다(`frontend/vite.config.ts`의 `server.proxy`). 그래서 화면 코드에서는 `fetch('/api/entries?month=2026-11')`처럼 주소 없이 호출하면 되고, 백엔드에 CORS 설정을 하지 않아도 됩니다. API를 쓰는 화면을 볼 때는 백엔드도 함께 실행해 두세요.
 
 ### 그 밖의 명령
 
@@ -83,7 +83,7 @@ scripts/kill-port.sh 3000     # 다른 포트 지정
 | 메서드 | 경로 | 설명 |
 |---|---|---|
 | `GET` | `/hello` | 서버 상태 확인 (인사말, 현재 시각, Java 버전) |
-| `GET` | `/api/entries` | 거래 내역 목록 (최신 날짜순) |
+| `GET` | `/api/entries?month=2026-11` | 한 달 거래 내역 목록 (최신 날짜순, `month`를 빼면 이번 달) |
 | `GET` | `/api/entries/{id}` | 거래 내역 단건 조회 |
 | `POST` | `/api/entries` | 거래 내역 등록 (201 + `Location` 헤더) |
 | `PUT` | `/api/entries/{id}` | 거래 내역 수정 (전체 교체) |

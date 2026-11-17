@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
@@ -17,6 +18,7 @@ import java.time.LocalDate
 
 /** 앱 전체를 띄우므로 기본 카테고리가 등록된 상태에서 시작한다 */
 @SpringBootTest
+@ActiveProfiles("test") // 실행 도구(Gradle/VS Code/IntelliJ)와 관계없이 샘플 데이터 없는 test 프로필로 고정
 @AutoConfigureMockMvc
 @Transactional // 테스트마다 DB 변경을 롤백
 class EntryControllerTest(
@@ -66,16 +68,41 @@ class EntryControllerTest(
     }
 
     @Test
-    fun `목록은 최신 날짜부터 정렬된다`() {
+    fun `월별 목록은 그 달의 1일부터 말일까지만, 최신 날짜부터 정렬해 돌려준다`() {
+        saveEntry(LocalDate.of(2026, 10, 31)) // 지난 달 마지막 날 → 제외
         saveEntry(LocalDate.of(2026, 11, 1))
         saveEntry(LocalDate.of(2026, 11, 15))
+        saveEntry(LocalDate.of(2026, 11, 30))
+        saveEntry(LocalDate.of(2026, 12, 1)) // 다음 달 첫날 → 제외
+
+        mockMvc.get("/api/entries") { param("month", "2026-11") }.andExpect {
+            status { isOk() }
+            jsonPath("$.length()") { value(3) }
+            jsonPath("$[0].date") { value("2026-11-30") }
+            jsonPath("$[1].date") { value("2026-11-15") }
+            jsonPath("$[2].date") { value("2026-11-01") }
+            jsonPath("$[0].category.name") { value("식비") }
+        }
+    }
+
+    @Test
+    fun `월을 지정하지 않으면 이번 달 목록을 돌려준다`() {
+        val today = LocalDate.now()
+        saveEntry(today)
+        saveEntry(today.minusMonths(1))
 
         mockMvc.get("/api/entries").andExpect {
             status { isOk() }
-            jsonPath("$.length()") { value(2) }
-            jsonPath("$[0].date") { value("2026-11-15") }
-            jsonPath("$[1].date") { value("2026-11-01") }
-            jsonPath("$[0].category.name") { value("식비") }
+            jsonPath("$.length()") { value(1) }
+            jsonPath("$[0].date") { value(today.toString()) }
+        }
+    }
+
+    @Test
+    fun `월 형식이 잘못되면 400과 month 필드 에러를 돌려준다`() {
+        mockMvc.get("/api/entries") { param("month", "2026-13") }.andExpect {
+            status { isBadRequest() }
+            jsonPath("$.errors[0].field") { value("month") }
         }
     }
 

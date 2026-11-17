@@ -5,6 +5,7 @@ import com.budgetbook.category.CategoryRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.YearMonth
 
 @Service
 @Transactional(readOnly = true)
@@ -13,8 +14,10 @@ class EntryService(
     private val categoryRepository: CategoryRepository,
 ) {
 
-    fun findAll(): List<EntryResponse> =
-        entryRepository.findAllByOrderByDateDescIdDesc().map(EntryResponse::from)
+    /** 한 달(1일 ~ 말일)의 거래 내역을 최신순으로 가져온다 (S-1) */
+    fun findAllByMonth(month: YearMonth): List<EntryResponse> =
+        entryRepository.findAllByDateBetweenOrderByDateDescIdDesc(month.atDay(1), month.atEndOfMonth())
+            .map(EntryResponse::from)
 
     fun findById(id: Long): EntryResponse =
         EntryResponse.from(getEntry(id))

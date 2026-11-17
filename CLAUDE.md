@@ -10,7 +10,7 @@ Layout: the repo root holds subprojects — `backend/` (Spring Boot API) and `fr
 
 ## Frontend
 
-React 19 + TypeScript + Vite, scaffolded with `create-vite` (react-ts template; lint is oxlint, not ESLint). The owner is learning from reading this code, so keep it minimal and plain: no extra libraries (state management, router, UI kit) unless asked. Currently only a welcome page (`src/App.tsx`).
+React 19 + TypeScript + Vite, scaffolded with `create-vite` (react-ts template; lint is oxlint, not ESLint). The owner is learning from reading this code, so keep it minimal and plain: no extra libraries (state management, router, UI kit) unless asked. Currently one page: `App.tsx` renders `MonthlyEntries.tsx` (월별 거래 내역: ‹ › month navigation, refetched in `useEffect` keyed on `month`, split into 수입/지출 tables client-side by `type`). `GET /api/entries` takes `?month=YYYY-MM` (`YearMonth`) and defaults to the current month — there is no all-entries endpoint. API types and fetch functions live in `src/api.ts`, mirroring the backend DTOs; color tokens (incl. `--income`/`--expense`) are CSS variables in `src/index.css` with a dark-mode override.
 
 Run from `frontend/`:
 
@@ -49,7 +49,7 @@ Error responses are RFC 9457 `ProblemDetail`. `GlobalExceptionHandler` extends `
 ## Profiles and tests
 
 - `spring.profiles.default=local`: running the app without a profile activates `local`, where `SampleDataLoader` (an `ApplicationRunner`) inserts 12 sample entries dated relative to today (this month + last month).
-- The Gradle `test` task sets `spring.profiles.active=test`, so tests never see sample data. Tests asserting exact row counts rely on this. Default categories *are* present in `@SpringBootTest` tests (look them up via `CategoryRepository.findByTypeAndName`), but not in `@DataJpaTest`, which doesn't run `ApplicationRunner`s.
+- Tests must never see sample data; tests asserting exact row counts rely on this. Every `@SpringBootTest` class carries `@ActiveProfiles("test")` so this holds in any runner — the Gradle `test` task also sets `spring.profiles.active=test`, but IDE test runners (VS Code Java Test Runner) bypass Gradle and would otherwise fall back to `local`. Add the annotation to new `@SpringBootTest` classes. Slice tests (`@WebMvcTest`, `@DataJpaTest`) don't run `ApplicationRunner`s, so they don't need it. Default categories *are* present in `@SpringBootTest` tests (look them up via `CategoryRepository.findByTypeAndName`), but not in `@DataJpaTest`, which doesn't run `ApplicationRunner`s.
 - A test that activates `local` must use its own H2 URL (see `SampleDataLoaderTest`), since `@SpringBootTest` contexts otherwise share `jdbc:h2:mem:budgetbook`.
 - Test slices in use: `@DataJpaTest` (repository), `@WebMvcTest` + `@MockitoBean` (web layer only), `@SpringBootTest` + `@AutoConfigureMockMvc` + `@Transactional` (full-stack API tests). Boot 4 packages: `org.springframework.boot.webmvc.test.autoconfigure.*`, `org.springframework.boot.data.jpa.test.autoconfigure.*`.
 

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
@@ -18,6 +19,7 @@ import java.time.LocalDate
 
 /** 앱 전체를 띄우므로 기본 카테고리가 등록된 상태에서 시작한다 */
 @SpringBootTest
+@ActiveProfiles("test") // 실행 도구(Gradle/VS Code/IntelliJ)와 관계없이 샘플 데이터 없는 test 프로필로 고정
 @AutoConfigureMockMvc
 @Transactional
 class CategoryControllerTest(
