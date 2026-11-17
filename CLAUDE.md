@@ -10,7 +10,12 @@ Layout: the repo root holds subprojects — `backend/` (Spring Boot API) and `fr
 
 ## Frontend
 
-React 19 + TypeScript + Vite, scaffolded with `create-vite` (react-ts template; lint is oxlint, not ESLint). The owner is learning from reading this code, so keep it minimal and plain: no extra libraries (state management, router, UI kit) unless asked. Currently one page: `App.tsx` renders `MonthlyEntries.tsx` (월별 거래 내역: ‹ › month navigation, refetched in `useEffect` keyed on `month`, split into 수입/지출 tables client-side by `type`). `GET /api/entries` takes `?month=YYYY-MM` (`YearMonth`) and defaults to the current month — there is no all-entries endpoint. API types and fetch functions live in `src/api.ts`, mirroring the backend DTOs; color tokens (incl. `--income`/`--expense`) are CSS variables in `src/index.css` with a dark-mode override.
+React 19 + TypeScript + Vite, scaffolded with `create-vite` (react-ts template; lint is oxlint, not ESLint). The owner is a backend developer learning from reading this code, so keep it plain and comment non-obvious Tailwind/React bits. Styling is Tailwind CSS v4 + shadcn/ui; no other libraries (state management, router, etc.) unless asked.
+
+- Style with Tailwind classes in `className`; there are no per-component CSS files. `src/index.css` holds only the Tailwind/shadcn imports and theme variables (`--background`, `--muted-foreground`, …). Dark mode follows the OS: `@custom-variant dark` is a `prefers-color-scheme` media query (not shadcn's default `.dark` class), and the dark theme variables live in a matching `@media` block.
+- `src/components/ui/` is shadcn-generated code (style `radix-nova`, see `components.json`). Add components with `npx shadcn@4.23.0 add <name>` rather than writing them by hand; prefer using them as-is over editing them. `cn()` (`src/lib/utils.ts`, re-exported from shadcn's `cn` package) merges class names. oxlint's `react/only-export-components` is turned off for that folder only.
+- Import alias `@/` → `src/` is configured in both `vite.config.ts` (`resolve.alias`) and `tsconfig.json`/`tsconfig.app.json` (`paths`, no `baseUrl` on TS 7).
+- Currently one page: `App.tsx` renders `MonthlyEntries.tsx` (월별 거래 내역: ‹ › month navigation, refetched in `useEffect` keyed on `month`, 수입/지출 split client-side by `type` into two `Card`+`Table`s laid out with `grid md:grid-cols-2`). `GET /api/entries` takes `?month=YYYY-MM` (`YearMonth`) and defaults to the current month — there is no all-entries endpoint. API types and fetch functions live in `src/api.ts`, mirroring the backend DTOs.
 
 Run from `frontend/`:
 

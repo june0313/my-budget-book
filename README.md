@@ -1,6 +1,6 @@
 # my-budget-book
 
-개인 가계부 애플리케이션입니다. 백엔드는 Kotlin + Spring Boot, 프런트엔드는 React + Vite로 만들고 있습니다.
+개인 가계부 애플리케이션입니다. 백엔드는 Kotlin + Spring Boot, 프런트엔드는 React + Vite(Tailwind CSS + shadcn/ui)로 만들고 있습니다.
 
 ## 프로젝트 구조
 
@@ -36,6 +36,14 @@ npm run dev     # 개발 서버 실행 → http://localhost:5173
 ```bash
 npm run build   # 타입 검사 + 배포용 빌드 (frontend/dist/)
 npm run lint    # 코드 검사 (oxlint)
+```
+
+### 화면 스타일
+
+스타일은 CSS 파일 대신 [Tailwind CSS](https://tailwindcss.com) 클래스를 `className`에 씁니다(예: `className="flex gap-4"`). 버튼·카드·표 같은 컴포넌트는 [shadcn/ui](https://ui.shadcn.com)로 추가하며, 코드가 `src/components/ui/`에 복사됩니다.
+
+```bash
+npx shadcn@4.23.0 add dialog   # 예: 다이얼로그 컴포넌트 추가
 ```
 
 ## 백엔드
