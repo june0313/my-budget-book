@@ -1,4 +1,4 @@
-import { CalendarDays, Tags, Wallet } from 'lucide-react'
+import { CalendarDays, Tags, Wallet, type LucideIcon } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -11,7 +11,23 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 
-function AppSidebar() {
+/** 사이드바로 이동할 수 있는 화면 */
+export type Page = 'entries' | 'categories'
+
+// 메뉴 목록. 메뉴를 늘릴 때는 여기에 한 줄 추가하면 된다
+const menuItems: { page: Page; label: string; icon: LucideIcon }[] = [
+  { page: 'entries', label: '월별 내역', icon: CalendarDays },
+  { page: 'categories', label: '카테고리', icon: Tags },
+]
+
+interface AppSidebarProps {
+  /** 지금 보고 있는 화면 (선택된 메뉴 강조용) */
+  page: Page
+  /** 메뉴를 눌렀을 때 호출된다. 화면 상태는 App이 갖고, 사이드바는 알리기만 한다 */
+  onSelect: (page: Page) => void
+}
+
+function AppSidebar({ page, onSelect }: AppSidebarProps) {
   return (
     // collapsible="icon": 접으면 아이콘만 남는 좁은 막대가 된다
     <Sidebar collapsible="icon">
@@ -35,19 +51,20 @@ function AppSidebar() {
           <SidebarGroupLabel>메뉴</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                {/* isActive: 현재 화면 강조 / tooltip: 접혔을 때 마우스를 올리면 뜨는 이름 */}
-                <SidebarMenuButton isActive tooltip="월별 내역">
-                  <CalendarDays />
-                  <span>월별 내역</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="카테고리">
-                  <Tags />
-                  <span>카테고리</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.page}>
+                  {/* isActive: 현재 화면 강조 / tooltip: 접혔을 때 마우스를 올리면 뜨는 이름 */}
+                  <SidebarMenuButton
+                    isActive={page === item.page}
+                    onClick={() => onSelect(item.page)}
+                    tooltip={item.label}
+                  >
+                    {/* 컴포넌트를 변수에 담아 두면 <item.icon />처럼 그릴 수 있다 */}
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
