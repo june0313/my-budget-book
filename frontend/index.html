@@ -5,6 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>가계부</title>
+    <script>
+      // OS가 다크 모드면 <html class="dark">를 붙인다 (shadcn 다크 모드는 이 클래스로 켜진다).
+      // 화면을 그리기 전에 실행되도록 <head>에 둔다. main.tsx에 두면 흰 화면이 잠깐 보일 수 있다.
+      const darkQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const applyTheme = () => document.documentElement.classList.toggle('dark', darkQuery.matches)
+      applyTheme()
+      darkQuery.addEventListener('change', applyTheme) // 앱을 켜 둔 채 OS 설정을 바꿔도 따라간다
+    </script>
   </head>
   <body>
     <div id="root"></div>
