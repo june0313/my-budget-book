@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Label, Pie, PieChart } from 'recharts'
-import { fetchEntries, type Entry, type EntryType } from './api'
+import { toast } from 'sonner'
+import { entryTypeLabels, fetchEntries, type Entry, type EntryType } from './api'
+import EntryFormDialog from './EntryFormDialog'
 // shadcn/ui 컴포넌트: npm 패키지가 아니라 src/components/ui/ 에 복사된 우리 코드다
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,12 +69,6 @@ function sum(entries: Entry[]) {
   return entries.reduce((total, entry) => total + entry.amount, 0)
 }
 
-const typeLabels: Record<EntryType, string> = {
-  INCOME: '수입',
-  SAVING: '저축·투자',
-  EXPENSE: '지출',
-}
-
 // 금액 앞 부호와 글자색. 남은 돈 카드와 거래 내역 목록이 함께 쓴다:
 // 수입은 + 초록, 지출은 − 빨강, 저축·투자는 − 기본색
 // (다크 모드(dark:)에서는 한 단계 밝은 색으로 바꿔 어두운 배경에서도 잘 보이게)
@@ -90,8 +86,10 @@ function MonthlyEntries() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // 같은 달을 다시 불러오고 싶을 때(거래 추가 후) 1씩 올리는 숫자. 값 자체는 의미 없고 "바뀌었다"는 신호로만 쓴다
+  const [reloadKey, setReloadKey] = useState(0)
 
-  // month가 바뀔 때마다 그 달의 목록을 다시 불러온다 (의존성 배열 [month])
+  // month나 reloadKey가 바뀔 때마다 그 달의 목록을 다시 불러온다 (의존성 배열 [month, reloadKey])
   useEffect(() => {
     const controller = new AbortController()
 
@@ -108,7 +106,7 @@ function MonthlyEntries() {
     // 다음 달로 넘어가거나 화면이 사라지면 이전 요청을 취소한다.
     // 버튼을 빠르게 여러 번 눌러도 마지막 달의 결과만 화면에 남는다.
     return () => controller.abort()
-  }, [month])
+  }, [month, reloadKey])
 
   // 달을 바꾸는 "사건"이 일어난 곳에서 로딩 상태도 함께 바꾼다.
   // (effect 안에서 setLoading(true)를 하면 렌더링이 한 번 더 일어나서 lint가 경고한다)
@@ -116,6 +114,23 @@ function MonthlyEntries() {
     setMonth(addMonths(month, diff))
     setLoading(true)
     setError(null)
+  }
+
+  // 거래를 추가하면 그 거래의 달로 이동해서 다시 불러온다.
+  // 이미 그 달을 보고 있으면 month는 그대로라 effect가 다시 돌지 않으므로 reloadKey를 함께 올린다
+  function handleCreated(entry: Entry) {
+    setMonth(entry.date.slice(0, 7)) // "2026-11-19" → "2026-11"
+    setReloadKey((key) => key + 1) // 이전 값을 받아 1을 더하는 함수형 업데이트
+    setLoading(true)
+    setError(null)
+
+    // 토스트 알림 (화면 구석에 잠깐 떴다 사라진다). toast.success: 체크 아이콘이 붙은 성공 알림
+    // 예: "거래를 추가했어요" / "11월 19일 · 식비 · −12,000원"
+    const [, entryMonth, entryDay] = entry.date.split('-').map(Number) // [, a, b]: 첫 값(연도)은 건너뛴다
+    const style = typeAmountStyle[entry.type]
+    toast.success('거래를 추가했어요', {
+      description: `${entryMonth}월 ${entryDay}일 · ${entry.category.name} · ${style.sign}${won(entry.amount)}`,
+    })
   }
 
   const [year, monthNumber] = month.split('-').map(Number)
@@ -134,6 +149,7 @@ function MonthlyEntries() {
           {year}년 {monthNumber}월
         </h1>
         <div className="flex gap-2">
+          <EntryFormDialog month={month} onCreated={handleCreated} />
           {/* data-icon: shadcn Button이 아이콘 쪽 안쪽 여백을 살짝 줄여 균형을 맞춘다
               (inline-start = 글자 앞, inline-end = 글자 뒤) */}
           <Button variant="outline" onClick={() => changeMonth(-1)}>
@@ -423,7 +439,7 @@ function EntryList({ entries }: { entries: Entry[] }) {
                       {/* 고정 지출이면 구분 옆에 작은 '고정' 표시. 변동은 기본이라 표시하지 않는다
                           variant="secondary": shadcn Badge가 제공하는 연한 회색 스타일 (기본은 진한 검정) */}
                       <span className="flex items-center gap-1.5">
-                        {typeLabels[entry.type]}
+                        {entryTypeLabels[entry.type]}
                         {entry.isFixed && <Badge variant="secondary">고정</Badge>}
                       </span>
                     </TableCell>

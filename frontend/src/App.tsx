@@ -3,6 +3,7 @@ import AppSidebar, { type Page } from './AppSidebar'
 import Categories from './Categories'
 import MonthlyEntries from './MonthlyEntries'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 function App() {
@@ -26,6 +27,10 @@ function App() {
           </div>
         </SidebarInset>
       </SidebarProvider>
+      {/* 토스트 알림이 그려지는 자리. 앱에 한 번만 두면 어느 화면에서든 toast()로 알림을 띄울 수 있다 (shadcn Sonner 문서의 설치 방법)
+          position="top-center": 화면 위쪽 가운데에 띄운다 (기본값은 오른쪽 아래 "bottom-right")
+          richColors: 종류별 색을 입힌다 (success 초록, error 빨강, warning 노랑, info 파랑). 그냥 toast()는 기본색 그대로 */}
+      <Toaster position="top-center" richColors />
     </TooltipProvider>
   )
 }
