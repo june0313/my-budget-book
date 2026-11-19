@@ -8,6 +8,12 @@ Personal budget book (가계부) app. The owner is building it partly to learn K
 
 Layout: the repo root holds subprojects — `backend/` (Spring Boot API) and `frontend/` (React + Vite UI) — plus `docs/`. Git is initialized at the root, not inside the subprojects.
 
+## Conventions
+
+- Commit messages follow Conventional Commits: `type(scope): subject` (e.g. `feat(frontend): 거래 추가 폼`, `fix(backend): ...`).
+- Intermediate artifacts (drafts, scratch outputs, generated reports) go in `_workspace/`.
+- Claude Code agents are defined in `.claude/agents/`, skills in `.claude/skills/`.
+
 ## Frontend
 
 React 19 + TypeScript + Vite, scaffolded with `create-vite` (react-ts template; lint is oxlint, not ESLint). The owner is a backend developer learning from reading this code, so keep it plain and comment non-obvious Tailwind/React bits. Styling is Tailwind CSS v4 + shadcn/ui; no other libraries (state management, router, etc.) unless asked. Exceptions, all installed as dependencies of shadcn components: `recharts` (`chart`), `react-day-picker` + `date-fns` (`calendar`), `sonner` + `next-themes` (`sonner`).
