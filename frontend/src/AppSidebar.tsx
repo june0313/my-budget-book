@@ -1,4 +1,4 @@
-import { CalendarDays, Tags, Wallet, type LucideIcon } from 'lucide-react'
+import { CalendarDays, FlaskConical, Tags, Wallet, type LucideIcon } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -12,12 +12,13 @@ import {
 } from '@/components/ui/sidebar'
 
 /** 사이드바로 이동할 수 있는 화면 */
-export type Page = 'entries' | 'categories'
+export type Page = 'entries' | 'categories' | 'draft'
 
 // 메뉴 목록. 메뉴를 늘릴 때는 여기에 한 줄 추가하면 된다
 const menuItems: { page: Page; label: string; icon: LucideIcon }[] = [
   { page: 'entries', label: '월별 내역', icon: CalendarDays },
   { page: 'categories', label: '카테고리', icon: Tags },
+  { page: 'draft', label: '시안', icon: FlaskConical }, // 디자인 확인용. 시안이 확정되면 지운다
 ]
 
 interface AppSidebarProps {

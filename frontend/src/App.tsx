@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AppSidebar, { type Page } from './AppSidebar'
 import Categories from './Categories'
+import MonthlyDraft from './drafts/MonthlyDraft'
 import MonthlyEntries from './MonthlyEntries'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -18,10 +19,12 @@ function App() {
           <header className="flex h-12 items-center border-b px-4">
             <SidebarTrigger />
           </header>
-          <div className="mx-auto w-full max-w-5xl px-4 py-10">
+          {/* 모든 화면이 쓰는 본문 영역. 폭 제한 없이 화면 너비를 다 쓴다 (넓은 화면에서 카드를 여러 칸으로 배치하려고) */}
+          <div className="w-full px-4 py-10">
             {/* 조건이 true일 때만 && 뒤의 화면을 그린다 */}
             {page === 'entries' && <MonthlyEntries />}
             {page === 'categories' && <Categories />}
+            {page === 'draft' && <MonthlyDraft />}
           </div>
         </SidebarInset>
       </SidebarProvider>
