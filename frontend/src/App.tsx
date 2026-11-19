@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import AppSidebar, { type Page } from './AppSidebar'
 import Categories from './Categories'
-import MonthlyDraft from './drafts/MonthlyDraft'
 import MonthlyEntries from './MonthlyEntries'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -24,7 +23,6 @@ function App() {
             {/* 조건이 true일 때만 && 뒤의 화면을 그린다 */}
             {page === 'entries' && <MonthlyEntries />}
             {page === 'categories' && <Categories />}
-            {page === 'draft' && <MonthlyDraft />}
           </div>
         </SidebarInset>
       </SidebarProvider>
