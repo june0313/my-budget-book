@@ -12,7 +12,7 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 
 /**
- * 거래 내역의 분류. 수입용과 지출용이 따로 있다.
+ * 거래 내역의 분류. 구분(수입, 저축·투자, 지출)마다 따로 있다.
  *
  * - 같은 구분(type) 안에서 이름은 중복될 수 없다. (DB 유니크 제약으로도 보장)
  * - 구분은 만든 뒤 바꿀 수 없다. 이미 이 카테고리를 쓰는 거래 내역과 어긋나기 때문.
@@ -23,7 +23,7 @@ class Category(
     @Column(nullable = false, length = 20)
     var name: String,
 
-    /** 수입/지출 구분. `val`이라 코드에서 바꿀 수 없고, `updatable = false`라 DB에서도 UPDATE 대상이 아니다 */
+    /** 구분(수입 / 저축·투자 / 지출). `val`이라 코드에서 바꿀 수 없고, `updatable = false`라 DB에서도 UPDATE 대상이 아니다 */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, updatable = false)
     val type: EntryType,

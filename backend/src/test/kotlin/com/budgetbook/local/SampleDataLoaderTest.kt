@@ -16,6 +16,6 @@ class SampleDataLoaderTest(
 
     @Test
     fun `local 프로필로 실행하면 샘플 데이터가 들어간다`() {
-        assertEquals(12, entryRepository.count())
+        assertEquals(19, entryRepository.count())
     }
 }

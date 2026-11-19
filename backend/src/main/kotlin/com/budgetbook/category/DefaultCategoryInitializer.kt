@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional
  * 샘플 데이터와 달리 앱의 기능이므로 프로필과 관계없이 항상 동작한다.
  * 기본 카테고리가 이미 있으면 아무것도 하지 않는다.
  *
- * `@Order(1)`: 거래 내역 샘플 데이터(SampleDataLoader)가 카테고리를 쓰므로 그보다 먼저 실행한다.
+ * `@Order(1)`: 거래 내역 샘플 데이터(SampleDataLoader, `@Order(3)`)가 카테고리를 쓰므로 그보다 먼저 실행한다.
  */
 @Component
 @Order(1)
@@ -30,7 +30,8 @@ class DefaultCategoryInitializer(
 
         val defaults =
             EXPENSE_CATEGORIES.map { Category(name = it, type = EntryType.EXPENSE, isDefault = true) } +
-                INCOME_CATEGORIES.map { Category(name = it, type = EntryType.INCOME, isDefault = true) }
+                INCOME_CATEGORIES.map { Category(name = it, type = EntryType.INCOME, isDefault = true) } +
+                SAVING_CATEGORIES.map { Category(name = it, type = EntryType.SAVING, isDefault = true) }
 
         categoryRepository.saveAll(defaults)
         log.info("기본 카테고리 {}개를 등록했습니다.", defaults.size)
@@ -39,5 +40,6 @@ class DefaultCategoryInitializer(
     companion object {
         val EXPENSE_CATEGORIES = listOf("식비", "카페", "교통", "주거", "통신", "쇼핑", "문화", "의료", "기타")
         val INCOME_CATEGORIES = listOf("급여", "부수입", "용돈", "기타")
+        val SAVING_CATEGORIES = listOf("적금", "투자", "연금", "기타")
     }
 }

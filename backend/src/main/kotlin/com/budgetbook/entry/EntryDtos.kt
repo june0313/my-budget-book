@@ -17,6 +17,12 @@ data class EntryRequest(
 
     @Size(max = 255, message = "메모는 255자 이하로 입력해 주세요")
     val memo: String? = null,
+
+    /** 고정 지출인지. 지출(EXPENSE)에만 true를 쓸 수 있다. 빼면 false (변동 지출) */
+    val isFixed: Boolean = false,
+
+    /** 자산 목록(GET /api/assets)에서 고른 자산의 id. 빼면 자산 없음 */
+    val assetId: Long? = null,
 )
 
 /** 거래 내역 응답 본문 */
@@ -27,9 +33,18 @@ data class EntryResponse(
     val amount: Long,
     val category: CategorySummary,
     val memo: String?,
+    val isFixed: Boolean,
+    /** 자산이 없으면 null */
+    val asset: AssetSummary?,
 ) {
     /** 거래 내역 응답에 함께 담는 카테고리 요약 */
     data class CategorySummary(
+        val id: Long,
+        val name: String,
+    )
+
+    /** 거래 내역 응답에 함께 담는 자산 요약 */
+    data class AssetSummary(
         val id: Long,
         val name: String,
     )
@@ -45,6 +60,9 @@ data class EntryResponse(
                 name = entry.category.name,
             ),
             memo = entry.memo,
+            isFixed = entry.isFixed,
+            // ?.let: asset이 null이 아닐 때만 블록을 실행하고, null이면 결과도 null
+            asset = entry.asset?.let { AssetSummary(id = requireNotNull(it.id), name = it.name) },
         )
     }
 }

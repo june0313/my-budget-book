@@ -69,7 +69,7 @@ class GlobalExceptionHandlerTest(
         postEntry("""{"date": "2026-11-15", "type": "FOOD", "amount": 1000, "categoryId": 1}""").andExpect {
             status { isBadRequest() }
             jsonPath("$.errors[0].field") { value("type") }
-            jsonPath("$.errors[0].message") { value("허용되지 않는 값입니다 (입력값: FOOD, 허용값: INCOME, EXPENSE)") }
+            jsonPath("$.errors[0].message") { value("허용되지 않는 값입니다 (입력값: FOOD, 허용값: INCOME, SAVING, EXPENSE)") }
         }
     }
 

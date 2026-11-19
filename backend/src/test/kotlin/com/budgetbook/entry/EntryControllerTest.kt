@@ -1,5 +1,6 @@
 package com.budgetbook.entry
 
+import com.budgetbook.asset.AssetRepository
 import com.budgetbook.category.Category
 import com.budgetbook.category.CategoryRepository
 import org.junit.jupiter.api.Test
@@ -25,6 +26,7 @@ class EntryControllerTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val entryRepository: EntryRepository,
     @Autowired private val categoryRepository: CategoryRepository,
+    @Autowired private val assetRepository: AssetRepository,
 ) {
 
     private fun category(type: EntryType, name: String): Category =
@@ -32,19 +34,24 @@ class EntryControllerTest(
 
     private val food get() = category(EntryType.EXPENSE, "식비")
     private val salary get() = category(EntryType.INCOME, "급여")
+    private val installmentSavings get() = category(EntryType.SAVING, "적금")
 
     private fun requestJson(
         type: EntryType = EntryType.EXPENSE,
         categoryId: Long? = food.id,
         date: String = "2026-11-15",
         amount: Long = 12000,
+        isFixed: Boolean = false,
+        assetId: Long? = null,
     ) = """
         {
           "date": "$date",
           "type": "$type",
           "amount": $amount,
           "categoryId": $categoryId,
-          "memo": "점심"
+          "memo": "점심",
+          "isFixed": $isFixed,
+          "assetId": $assetId
         }
     """.trimIndent()
 
@@ -64,6 +71,67 @@ class EntryControllerTest(
             jsonPath("$.amount") { value(12000) }
             jsonPath("$.category.id") { value(food.id) }
             jsonPath("$.category.name") { value("식비") }
+            jsonPath("$.asset") { value(null) } // 자산을 보내지 않으면 null
+        }
+    }
+
+    @Test
+    fun `자산을 골라 등록하면 응답에 자산 정보가 담긴다`() {
+        val card = checkNotNull(assetRepository.findByName("신용카드"))
+
+        mockMvc.post("/api/entries") {
+            contentType = MediaType.APPLICATION_JSON
+            content = requestJson(assetId = card.id)
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.asset.id") { value(card.id) }
+            jsonPath("$.asset.name") { value("신용카드") }
+        }
+    }
+
+    @Test
+    fun `없는 자산으로 등록하면 400을 돌려준다`() {
+        mockMvc.post("/api/entries") {
+            contentType = MediaType.APPLICATION_JSON
+            content = requestJson(assetId = 9999)
+        }.andExpect {
+            status { isBadRequest() }
+            jsonPath("$.detail") { value("존재하지 않는 자산입니다. assetId=9999") }
+        }
+    }
+
+    @Test
+    fun `저축·투자 거래를 저축·투자 카테고리로 등록할 수 있다`() {
+        mockMvc.post("/api/entries") {
+            contentType = MediaType.APPLICATION_JSON
+            content = requestJson(type = EntryType.SAVING, categoryId = installmentSavings.id, amount = 500_000)
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.type") { value("SAVING") }
+            jsonPath("$.category.name") { value("적금") }
+            jsonPath("$.isFixed") { value(false) }
+        }
+    }
+
+    @Test
+    fun `지출은 고정 지출로 표시할 수 있다`() {
+        mockMvc.post("/api/entries") {
+            contentType = MediaType.APPLICATION_JSON
+            content = requestJson(isFixed = true)
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.isFixed") { value(true) }
+        }
+    }
+
+    @Test
+    fun `지출이 아닌 거래를 고정 지출로 표시하면 400을 돌려준다`() {
+        mockMvc.post("/api/entries") {
+            contentType = MediaType.APPLICATION_JSON
+            content = requestJson(type = EntryType.INCOME, categoryId = salary.id, isFixed = true)
+        }.andExpect {
+            status { isBadRequest() }
+            jsonPath("$.detail") { value("고정 지출 표시는 지출에만 쓸 수 있습니다. (거래: INCOME)") }
         }
     }
 

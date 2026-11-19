@@ -30,6 +30,7 @@ class CategoryControllerTest(
 
     private val expenseCount = DefaultCategoryInitializer.EXPENSE_CATEGORIES.size
     private val incomeCount = DefaultCategoryInitializer.INCOME_CATEGORIES.size
+    private val savingCount = DefaultCategoryInitializer.SAVING_CATEGORIES.size
 
     private fun createJson(name: String, type: EntryType) = """{"name": "$name", "type": "$type"}"""
 
@@ -37,7 +38,7 @@ class CategoryControllerTest(
     fun `기본 카테고리 전체를 조회한다`() {
         mockMvc.get("/api/categories").andExpect {
             status { isOk() }
-            jsonPath("$.length()") { value(expenseCount + incomeCount) }
+            jsonPath("$.length()") { value(expenseCount + incomeCount + savingCount) }
             jsonPath("$[0].isDefault") { value(true) }
         }
     }

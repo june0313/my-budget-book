@@ -13,3 +13,11 @@ class EntryNotFoundException(id: Long) :
  */
 class InvalidEntryCategoryException(message: String) :
     ResponseStatusException(HttpStatus.BAD_REQUEST, message)
+
+/** 400: 요청의 자산 id가 없는 자산일 때 */
+class InvalidEntryAssetException(assetId: Long) :
+    ResponseStatusException(HttpStatus.BAD_REQUEST, "존재하지 않는 자산입니다. assetId=$assetId")
+
+/** 400: 지출이 아닌 거래(수입, 저축·투자)를 고정 지출로 표시했을 때 */
+class FixedOnlyForExpenseException(type: EntryType) :
+    ResponseStatusException(HttpStatus.BAD_REQUEST, "고정 지출 표시는 지출에만 쓸 수 있습니다. (거래: $type)")
